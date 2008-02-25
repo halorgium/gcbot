@@ -1,0 +1,10 @@
+Group is
+        absyn.sml
+	gcbot.grm
+	gcbot.lex
+	parse.sml
+	interpreter.sml
+	ircbot.sml
+	$/smlnj-lib.cm
+	$/ml-yacc-lib.cm
+	$/basis.cm	

@@ -1,0 +1,119 @@
+
+structure A = Absyn
+
+%%
+
+%name Gc
+
+%term LINT of int
+    | LREAL of real
+    | IDENT of string
+    | LSTR of string
+    | TRUE
+    | FALSE
+    | IF
+    | THEN
+    | ELSE
+    | FN
+    | WHERE
+    | AS
+    | BAND
+    | BOR
+    | BNOT
+    | CONS
+    | APPEND
+    | PLUS
+    | MINUS
+    | TIMES
+    | DIV
+    | EQ
+    | NEQ
+    | LTEQ
+    | GTEQ
+    | LT
+    | GT
+    | ASSIGN
+    | MUTASSIGN
+    | CLAUSEASSIGN
+    | LPAR
+    | RPAR
+    | LBR
+    | RBR
+    | LSQ
+    | RSQ
+    | COMMA
+    | SEMI
+    | ERROR
+    | FNAPP
+    | EOF
+  
+%nonterm stm of Absyn.stm
+       | exp of Absyn.exp
+       | bexp of Absyn.exp
+       | guardlist of Absyn.exp list
+       | explist of Absyn.exp list
+
+%pos int
+%verbose
+%start stm
+%eop EOF %noshift EOF
+
+%right FN
+%nonassoc ASSIGN EQ NEQ COMMA IDENT LINT LREAL LSTR LSQ RSQ
+%left CONS APPEND
+%left PLUS MINUS
+%left TIMES DIV
+%left BAND BOR
+%right FNAPP
+
+%%
+
+stm : IDENT ASSIGN exp		(A.Assign_s(IDENT,exp))
+    | IDENT CLAUSEASSIGN exp    (A.Clause_s(IDENT,exp))
+    | exp                       (A.Expr_s(exp,expleft))
+
+exp : exp exp       %prec FNAPP (A.Apply_e(exp1,exp2))
+    | LINT          (A.Int_e(LINT))
+    | LREAL         (A.Real_e(LREAL))
+    | IDENT         (A.Var_e(IDENT,NONE))
+    | LSTR          (A.String_e(LSTR))
+    | LPAR exp RPAR (exp)
+    | IF bexp THEN exp ELSE exp (A.If_e(bexp,exp1,exp2))
+    | FN IDENT ASSIGN exp (A.Fn_e(A.Var_e(IDENT,NONE),exp))
+    | FN LPAR explist RPAR ASSIGN exp (A.Fn_e(A.Tuple_e(explist),exp))
+    | FN LPAR RPAR ASSIGN exp (A.Fn_e(A.Unit_e,exp))
+    | IDENT MUTASSIGN exp (A.MutableAssign_e(IDENT,exp))
+    | exp SEMI exp	(A.Seq_e(exp1,exp2))
+    | LSQ explist RSQ  (A.List_e(explist))
+    | LSQ exp RSQ   (A.List_e([exp]))
+    | LPAR explist RPAR  (A.Tuple_e(explist))
+    | LPAR RPAR        (A.Unit_e)
+    | LSQ RSQ	         (A.List_e([]))
+    | exp PLUS exp  %prec PLUS (A.Infix_e(exp1,A.Plus,exp2))
+    | exp MINUS exp %prec PLUS (A.Infix_e(exp1,A.Minus,exp2))
+    | exp TIMES exp %prec TIMES (A.Infix_e(exp1,A.Times,exp2))
+    | exp DIV exp  %prec TIMES (A.Infix_e(exp1,A.Divide,exp2))
+    | exp CONS exp %prec CONS (A.Infix_e(exp1,A.Cons,exp2))
+    | exp APPEND exp %prec CONS (A.Infix_e(exp1,A.Append,exp2))
+    | bexp	     (bexp)
+
+bexp : exp EQ exp    (A.Infix_e(exp1,A.Eq,exp2))
+     | exp NEQ exp   (A.Infix_e(exp1,A.NEq,exp2))
+     | exp LTEQ exp    (A.Infix_e(exp1,A.LtEq,exp2))
+     | exp GTEQ exp    (A.Infix_e(exp1,A.GtEq,exp2))
+     | exp LT exp    (A.Infix_e(exp1,A.Lt,exp2))
+     | exp GT exp    (A.Infix_e(exp1,A.Gt,exp2))
+     | bexp BAND bexp (A.Infix_e(bexp1,A.BAnd,bexp2))
+     | bexp BOR bexp (A.Infix_e(bexp1,A.BOr,bexp2))
+     | BNOT bexp (A.BNot_e(bexp))
+     | TRUE          (A.Bool_e(true))
+     | FALSE         (A.Bool_e(false))
+     | LPAR bexp RPAR (bexp)
+
+guardlist : bexp        ([A.GuardBool_e(bexp)])
+          | IDENT AS exp ([A.GuardAs_e(IDENT,exp)])
+          | guardlist COMMA guardlist  (guardlist1 @ guardlist2)
+
+
+explist   : exp COMMA explist  (exp :: explist)
+          | exp                ([exp])
