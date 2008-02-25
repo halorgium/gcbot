@@ -1,0 +1,45 @@
+name = [a-zA-Z][a-zA-Z0-9]*
+intliteral = [-0-9][0-9]*
+strliteral = "(.*)"
+
+stm ::= <name> = <expr>
+stm ::= <name> |= <expr>
+stm ::= <expr>
+expr ::= ( <expr> )
+expr ::= if <bexp> then <expr> else <expr>
+expr ::= fn <name> where <guardlist> = <expr>
+expr ::= fn <name> = <expr>
+expr ::= <name> := <expr>
+expr ::= <expr> ; <expr>
+expr ::= <expr> <expr>
+expr ::= [ <exprlist> ]
+expr ::= [ <expr> ]
+expr ::= ( <exprlist> )
+expr ::= <expr> + <expr>
+expr ::= <expr> - <expr>
+expr ::= <expr> * <expr>
+expr ::= <expr> / <expr>
+expr ::= <expr> :: <expr>
+expr ::= <expr> @ <expr>
+expr ::= <bexp>
+expr ::= <name>
+expr ::= <intliteral>
+expr ::= <strliteral>
+expr ::= true
+expr ::= false
+bexp ::= <expr> <= <expr>
+bexp ::= <expr> >= <expr>
+bexp ::= <expr> == <expr>
+bexp ::= <expr> != <expr>
+bexp ::= <expr> < <expr>
+bexp ::= <expr> > <expr>
+bexp ::= <bexp> and <bexp>
+bexp ::= <bexp> or <bexp>
+bexp ::= not <bexp>
+
+<guardlist> ::= <bexp>
+<guardlist> ::= <name> as <expr>
+<guardlist> ::= <guardlist> , <guardlist>
+
+<exprlist> ::= <expr> , <exprlist>
+<exprlist> ::= <expr>
